@@ -1,0 +1,1 @@
+# typescript-eslint-type-trimmer
