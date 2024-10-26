@@ -5,6 +5,6 @@
     "skipLibCheck": true,
     "noImplicitAny": false
   },
-  "include": ["src"],
+  "include": ["src", "file.ts"],
   "exclude": ["node_modules"]
 }
