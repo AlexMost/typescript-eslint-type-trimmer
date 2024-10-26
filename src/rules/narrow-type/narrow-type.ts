@@ -1,32 +1,39 @@
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-function hasJSExtension(filePath: string) {
-  return /\.(js|jsx|mjs|cjs)$/.test(filePath);
-}
-
 const createRule = ESLintUtils.RuleCreator(
-  () => 'https://github.com/pipopotamasu/eslint-plugin-no-implicit-any'
+  name => `https://example.com/rule/${name}`,
 );
 
+// Type: RuleModule<"uppercase", ...>
 export const rule = createRule({
-  name: 'narrow-type',
-  defaultOptions: [],
-  meta: {
-    docs: {
-      description: 'Narrowing type',
-    },
-    type: 'problem',
-    messages: { typeIsToBroad: 'Type is too broad.' },
-    fixable: 'code',
-    schema: [],
-  },
-  create: function (context) {
-    if (hasJSExtension(context.getFilename())) return {};
-
+  create(context) {
     return {
       FunctionDeclaration(node) {
-        console.log(node);
+        const services = ESLintUtils.getParserServices(context);
+        const type = services.getTypeAtLocation(node);
+        console.log(type);
+        if (node.id != null) {
+          if (/^[a-z]/.test(node.id.name)) {
+            context.report({
+              messageId: 'uppercase',
+              node: node.id,
+            });
+          }
+        }
       },
     };
   },
+  name: 'uppercase-first-declarations',
+  meta: {
+    docs: {
+      description:
+        'Function declaration names should start with an upper-case letter.',
+    },
+    messages: {
+      uppercase: 'Start this name with an upper-case letter.',
+    },
+    type: 'suggestion',
+    schema: [],
+  },
+  defaultOptions: [],
 });

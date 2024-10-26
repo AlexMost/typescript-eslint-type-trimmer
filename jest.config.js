@@ -1,5 +1,15 @@
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['**/*.spec.ts'],
-};
+  testMatch: [
+    '**/tests/**/*.spec.ts',
+  ],
+  transform: {
+    '^.+.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.json',
+        isolatedModules: true,
+      },
+    ],
+  },
+}
