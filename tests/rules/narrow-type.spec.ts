@@ -17,11 +17,20 @@ ruleTester.run("my-rule", rule, {
     `
         type User = {
           id: number;
-          name: string;
+          email: string;
+          company: {
+            id: number;
+            name: string;
+          }
+        }
+        
+        function test2(data: { id: number }) {
+          console.log(id);
         }
         
         function test(user: User) {
-          console.log(user.id, user.name);
+          console.log(user.id);
+          test2(user);
         }
       `,
   ],

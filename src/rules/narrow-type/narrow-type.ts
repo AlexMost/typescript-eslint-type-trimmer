@@ -1,38 +1,41 @@
-import { ESLintUtils } from '@typescript-eslint/utils';
+import { ESLintUtils } from "@typescript-eslint/utils";
+import { getTypeSetFromParam } from "../../utils/type-utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  name => `https://example.com/rule/${name}`,
+  (name) => `https://example.com/rule/${name}`,
 );
 
 // Type: RuleModule<"uppercase", ...>
 export const rule = createRule({
   create(context) {
+    const services = ESLintUtils.getParserServices(context);
+    const checker = services.program.getTypeChecker();
+
     return {
       FunctionDeclaration(node) {
-        const services = ESLintUtils.getParserServices(context);
-        const type = services.getTypeAtLocation(node);
-        console.log(type);
-        if (node.id != null) {
-          if (/^[a-z]/.test(node.id.name)) {
-            context.report({
-              messageId: 'uppercase',
-              node: node.id,
-            });
-          }
-        }
+        if (!node.params.length) return;
+        const [param] = node.params;
+        if (param.type != "Identifier") return;
+        const paramType = services.getTypeAtLocation(param);
+        const paramName = param.name;
+        const typeName = paramType.aliasSymbol?.escapedName;
+        if (!typeName) return;
+        const paramTypeSet = getTypeSetFromParam(checker, paramName, paramType);
+        console.log(paramTypeSet);
+        console.log(`${paramName}:${typeName}. Type fields: ${paramTypeSet}`);
       },
     };
   },
-  name: 'uppercase-first-declarations',
+  name: "narrow-type",
   meta: {
     docs: {
-      description:
-        'Function declaration names should start with an upper-case letter.',
+      description: "This rule forces type narrowing of the scpecified type.",
     },
     messages: {
-      uppercase: 'Start this name with an upper-case letter.',
+      uppercase:
+        "Narrow param type to have only necessary properties for this function.",
     },
-    type: 'suggestion',
+    type: "suggestion",
     schema: [],
   },
   defaultOptions: [],
