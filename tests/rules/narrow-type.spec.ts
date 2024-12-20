@@ -13,7 +13,30 @@ const ruleTester = new RuleTester({
 });
 
 ruleTester.run("my-rule", rule, {
-  valid: [],
+  valid: [
+    {
+      code: `
+        type User = {
+              id: number;
+              email: string;
+            }
+            
+            function fn1(user: { id: number }): void {
+               console.log(user.id)
+            }
+            
+            function fn2(user: { email: string }): void {
+               console.log(user.email)
+            }
+            
+            function test(user: User) {
+               fn1(user);
+               fn2(user);
+            }
+      `,
+      options: [{ type: "User" }],
+    },
+  ],
   invalid: [
     {
       code: `
@@ -31,7 +54,7 @@ ruleTester.run("my-rule", rule, {
             }
             
             function fn2(user: { email: string }): void {
-               console.log(user.id)
+               console.log(user.email)
             }
             
             function test(user: User) {

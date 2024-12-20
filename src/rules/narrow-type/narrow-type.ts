@@ -33,14 +33,12 @@ export const rule = createRule({
           services.esTreeNodeToTSNodeMap.get(node),
         );
         const unusedFields = findUnusedFields(paramTypeSet, usages);
-        if (unusedFields) {
-          console.log("unused fields", unusedFields);
+        if (unusedFields.size) {
+          context.report({
+            node: param,
+            message: `Unused fields from ${paramName}:${typeName}\n${Array.from(unusedFields).join("\n")}`,
+          });
         }
-        context.report({
-          node: param,
-          message: `Unused fields from ${paramName}:${typeName}\n${Array.from(unusedFields).join("\n")}`,
-        });
-        // console.log(`${paramName}:${typeName}. Type fields: ${JSON.stringify(paramTypeSet)}`);
       },
     };
   },
