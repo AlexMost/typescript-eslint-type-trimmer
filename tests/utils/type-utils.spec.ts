@@ -1,6 +1,9 @@
 import * as ts from "typescript";
 
-import { getTypeSetFromParam } from "../../src/utils/type-utils";
+import {
+  getTypeSetFromParam,
+  findTypeUsagesSet,
+} from "../../src/utils/type-utils";
 
 describe("getTypeSetFromParam", () => {
   test("should fetch nested types", () => {
@@ -52,3 +55,4 @@ describe("getTypeSetFromParam", () => {
     }
   });
 });
+

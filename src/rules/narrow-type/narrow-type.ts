@@ -1,5 +1,9 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
-import { getTypeSetFromParam } from "../../utils/type-utils";
+import {
+  findTypeUsagesSet,
+  findUnusedFields,
+  getTypeSetFromParam,
+} from "../../utils/type-utils";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://example.com/rule/${name}`,
@@ -10,7 +14,9 @@ export const rule = createRule({
   create(context) {
     const services = ESLintUtils.getParserServices(context);
     const checker = services.program.getTypeChecker();
-
+    const typesToCheck: Set<string> = new Set(
+      context.options.map(({ type }) => type),
+    );
     return {
       FunctionDeclaration(node) {
         if (!node.params.length) return;
@@ -19,10 +25,22 @@ export const rule = createRule({
         const paramType = services.getTypeAtLocation(param);
         const paramName = param.name;
         const typeName = paramType.aliasSymbol?.escapedName;
-        if (!typeName) return;
+        if (!typeName || !typesToCheck.has(typeName)) return;
         const paramTypeSet = getTypeSetFromParam(checker, paramName, paramType);
-        console.log(paramTypeSet);
-        console.log(`${paramName}:${typeName}. Type fields: ${paramTypeSet}`);
+        const usages = findTypeUsagesSet(
+          checker,
+          paramName,
+          services.esTreeNodeToTSNodeMap.get(node),
+        );
+        const unusedFields = findUnusedFields(paramTypeSet, usages);
+        if (unusedFields) {
+          console.log("unused fields", unusedFields);
+        }
+        context.report({
+          node: param,
+          message: `Unused fields from ${paramName}:${typeName}\n${Array.from(unusedFields).join("\n")}`,
+        });
+        // console.log(`${paramName}:${typeName}. Type fields: ${JSON.stringify(paramTypeSet)}`);
       },
     };
   },
@@ -31,11 +49,7 @@ export const rule = createRule({
     docs: {
       description: "This rule forces type narrowing of the scpecified type.",
     },
-    messages: {
-      uppercase:
-        "Narrow param type to have only necessary properties for this function.",
-    },
-    type: "suggestion",
+    type: "problem",
     schema: [],
   },
   defaultOptions: [],

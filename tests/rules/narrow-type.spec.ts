@@ -13,28 +13,41 @@ const ruleTester = new RuleTester({
 });
 
 ruleTester.run("my-rule", rule, {
-  valid: [
-    `
-        type User = {
-          id: number;
-          email: string;
-          company: {
-            id: number;
-            name: string;
-          }
-        }
-        
-        function test2(data: { id: number }) {
-          console.log(id);
-        }
-        
-        function test(user: User) {
-          console.log(user.id);
-          test2(user);
-        }
-      `,
-  ],
+  valid: [],
   invalid: [
-    /* ... */
+    {
+      code: `
+        type User = {
+              id: number;
+              email: string;
+              company: {
+                 id: number;
+                 name: string;
+              }
+            }
+            
+            function fn1(user: { id: number }): void {
+               console.log(user.id)
+            }
+            
+            function fn2(user: { email: string }): void {
+               console.log(user.id)
+            }
+            
+            function test(user: User) {
+               fn1(user);
+               fn2(user);
+            }
+      `,
+      options: [{ type: "User" }],
+      errors: [
+        {
+          message:
+            "Unused fields from user:User\n" +
+            "user.company.id\n" +
+            "user.company.name",
+        },
+      ],
+    },
   ],
 });

@@ -23,3 +23,45 @@ export function getTypeSetFromParam(
   }
   return result;
 }
+
+function printNode(node: ts.Node) {
+  const printer = ts.createPrinter();
+  console.log(
+    printer.printNode(
+      ts.EmitHint.Unspecified,
+      node,
+      ts.createSourceFile("", "", ts.ScriptTarget.Latest),
+    ),
+  );
+}
+
+export function findTypeUsagesSet(
+  checker: ts.TypeChecker,
+  paramName: string,
+  node: ts.Node,
+): Set<string> {
+  const usages: Set<string> = new Set();
+
+  function traverseNode(innerNode: ts.Node) {
+    if (ts.isCallExpression(innerNode)) {
+      const signature = checker.getResolvedSignature(innerNode)
+      const typeParam = checker.getTypeOfSymbol(signature.parameters[0])
+      const paramTypeSet = getTypeSetFromParam(checker, paramName, typeParam);
+      paramTypeSet.forEach((value) => usages.add(value));
+    }
+    ts.forEachChild(innerNode, traverseNode);
+  }
+
+  ts.forEachChild(node, traverseNode);
+  return usages;
+}
+
+export function findUnusedFields(argumentTypeSet: Set<string>, usageTypeSet: Set<string>) {
+  const unusedSet: Set<string> = new Set();
+  argumentTypeSet.forEach((value) => {
+    if (!usageTypeSet.has(value)) {
+      unusedSet.add(value);
+    }
+  })
+  return unusedSet;
+}
